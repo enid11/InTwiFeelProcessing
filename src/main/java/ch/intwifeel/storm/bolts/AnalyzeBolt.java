@@ -1,8 +1,5 @@
 package ch.intwifeel.storm.bolts;
 
-/**
- * Created by eni on 5/14/2015.
- */
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -41,11 +38,12 @@ public class AnalyzeBolt extends BaseRichBolt
     public void execute(Tuple tuple)
     {
         // get the word from the 1st column of incoming tuple
-        String sentence = tuple.getString(0);
+        String id = tuple.getString(0);
+        String sentence = tuple.getString(1);
         String score= Integer.toString(0);//sentiment analysis logic
 
         // emit the word and count
-        collector.emit(new Values(sentence, score));
+        collector.emit(new Values(id,sentence, score));
     }
 
     @Override
