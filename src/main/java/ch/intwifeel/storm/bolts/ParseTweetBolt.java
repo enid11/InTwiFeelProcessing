@@ -1,6 +1,3 @@
-/**
- * Created by eni on 5/14/2015.
- */
 package ch.intwifeel.storm.bolts;
 
 import backtype.storm.task.OutputCollector;
