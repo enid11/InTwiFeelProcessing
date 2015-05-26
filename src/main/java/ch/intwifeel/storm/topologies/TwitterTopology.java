@@ -16,7 +16,7 @@ import ch.intwifeel.storm.spouts.TwitterSpout;
 
 
 
-class TwittertTopology
+class TwitterTopology
 {
     public static void main(String[] args) throws Exception
     {
