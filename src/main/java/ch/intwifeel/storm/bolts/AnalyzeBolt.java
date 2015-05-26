@@ -8,8 +8,16 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.CoreMap;
 
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A bolt that counts the words that it receives
@@ -40,7 +48,9 @@ public class AnalyzeBolt extends BaseRichBolt
         // get the word from the 1st column of incoming tuple
         String id = tuple.getString(0);
         String sentence = tuple.getString(1);
-        String score= Integer.toString(0);//sentiment analysis logic
+        //String score= Integer.toString(0);//sentiment analysis logic
+        String score= findSentiment(sentence);
+
 
         // emit the word and count
         collector.emit(new Values(id,sentence, score));
@@ -55,4 +65,28 @@ public class AnalyzeBolt extends BaseRichBolt
         // declare the first column 'word', second column 'count'
         outputFieldsDeclarer.declare(new Fields("id","sentence","score"));
     }
+    public String findSentiment(String l) {
+        String line=new String(l);
+        Properties props = new Properties();
+        props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        int mainSentiment = 0;
+        if (line != null && line.length() > 0) {
+            int longest = 0;
+            Annotation annotation = pipeline.process(line);
+            for (CoreMap sentence : annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
+                Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+                int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
+                String partText = sentence.toString();
+                if (partText.length() > longest) {
+                    mainSentiment = sentiment;
+                    longest = partText.length();
+                }
+
+            }
+        }
+        return Integer.toString(mainSentiment);
+
+    }
+
 }
