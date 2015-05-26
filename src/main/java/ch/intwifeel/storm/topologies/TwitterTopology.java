@@ -1,9 +1,5 @@
 package ch.intwifeel.storm.topologies;
 
-/**
- * Created by eni on 5/14/2015.
- */
-
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
@@ -14,16 +10,12 @@ import ch.intwifeel.storm.bolts.ParseTweetBolt;
 import ch.intwifeel.storm.bolts.ReportBolt;
 import ch.intwifeel.storm.spouts.TwitterSpout;
 
-
-
 class TwitterTopology
 {
     public static void main(String[] args) throws Exception
     {
         // create the topology
         TopologyBuilder builder = new TopologyBuilder();
-
-
 
         // now create the tweet spout with the credentials
         TwitterSpout tweetSpout = new TwitterSpout(

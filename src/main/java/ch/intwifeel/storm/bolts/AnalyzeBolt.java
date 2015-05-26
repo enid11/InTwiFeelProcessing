@@ -46,14 +46,14 @@ public class AnalyzeBolt extends BaseRichBolt
     public void execute(Tuple tuple)
     {
         // get the word from the 1st column of incoming tuple
-        String id = tuple.getString(0);
-        String sentence = tuple.getString(1);
+        String sentence = tuple.getString(0);
+        String word = tuple.getString(1);
         //String score= Integer.toString(0);//sentiment analysis logic
         String score = findSentiment(sentence);
 
 
         // emit the word and count
-        collector.emit(new Values(id, sentence, score));
+        collector.emit(new Values(sentence, score, word));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class AnalyzeBolt extends BaseRichBolt
         // tuple consists of a two columns called 'word' and 'count'
 
         // declare the first column 'word', second column 'count'
-        outputFieldsDeclarer.declare(new Fields("id","sentence","score"));
+        outputFieldsDeclarer.declare(new Fields("sentence","score", "word"));
     }
 
     public String findSentiment(String sentence) {

@@ -1,9 +1,5 @@
 package ch.intwifeel.storm.spouts;
 
-/**
- * Created by eni on 5/14/2015.
- */
-
 import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -139,7 +135,9 @@ public class TwitterSpout extends BaseRichSpout
         }
 
         // now emit the tweet to next stage bolt
-        collector.emit(new Values(ret));
+        //TODO have to connect to Mongo to get new words/products/terms, start stream afterwards
+
+        collector.emit(new Values(ret, "Term1Update"));
     }
 
     @Override
@@ -170,6 +168,6 @@ public class TwitterSpout extends BaseRichSpout
     {
         // tell storm the schema of the output tuple for this spout
         // tuple consists of a single column called 'tweet'
-        outputFieldsDeclarer.declare(new Fields("tweet"));
+        outputFieldsDeclarer.declare(new Fields("tweet", "word"));
     }
 }

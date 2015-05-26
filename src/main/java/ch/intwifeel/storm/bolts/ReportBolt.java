@@ -41,7 +41,6 @@ public class ReportBolt extends BaseRichBolt
         redis = client.connect();
 
         //connect to Mongo
-
         //TODO If credentials needed, uncomment this and add credential as second parameter to MongoClient constructor
         //MongoCredential credential = MongoCredential.createCredential("user1", "intwifeel", "password1".toCharArray());
 
@@ -51,16 +50,16 @@ public class ReportBolt extends BaseRichBolt
     @Override
     public void execute(Tuple tuple)
     {
-        // access the first column 'word'
+        // access the column 'word'
         String word = tuple.getStringByField("word");
-
-        // access the second column 'count'
-        Integer count = tuple.getIntegerByField("count");
 
         String score = tuple.getStringByField("score");
 
-        // publish the word count to redis using word as the key
-        redis.publish("WordCountTopology", word + "|" + Long.toString(count));
+        String exampleSentence = tuple.getStringByField("sentence");
+
+        // publish the example sentence to redis using word as the key
+        redis.set(word, exampleSentence);
+        redis.expire(word, 20);
 
         saveScoreToMongo(word, score);
     }

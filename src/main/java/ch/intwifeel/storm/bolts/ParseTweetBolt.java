@@ -28,15 +28,15 @@ public class ParseTweetBolt extends BaseRichBolt
     @Override
     public void execute(Tuple tuple)
     {
-        // get the 1st column 'tweet' from tuple
-        String id = tuple.getString(0);
-        String tweet = tuple.getString(1);//add removal of non alphanumeric symbols
-        collector.emit(new Values(id,tweet));
+        String tweet = tuple.getString(0);//add removal of non alphanumeric symbols
+        String word = tuple.getString(1);
+
+        collector.emit(new Values(tweet, word));
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer)
     {
-        declarer.declare(new Fields("id","sentence"));
+        declarer.declare(new Fields("sentence", "word"));
     }
 }
