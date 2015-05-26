@@ -44,6 +44,8 @@ public class ReportBolt extends BaseRichBolt
         // access the second column 'count'
         Integer count = tuple.getIntegerByField("count");
 
+        String score = tuple.getStringByField("score");
+
         // publish the word count to redis using word as the key
         redis.publish("WordCountTopology", word + "|" + Long.toString(count));
     }

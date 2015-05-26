@@ -49,11 +49,11 @@ public class AnalyzeBolt extends BaseRichBolt
         String id = tuple.getString(0);
         String sentence = tuple.getString(1);
         //String score= Integer.toString(0);//sentiment analysis logic
-        String score= findSentiment(sentence);
+        String score = findSentiment(sentence);
 
 
         // emit the word and count
-        collector.emit(new Values(id,sentence, score));
+        collector.emit(new Values(id, sentence, score));
     }
 
     @Override
@@ -65,28 +65,30 @@ public class AnalyzeBolt extends BaseRichBolt
         // declare the first column 'word', second column 'count'
         outputFieldsDeclarer.declare(new Fields("id","sentence","score"));
     }
-    public String findSentiment(String l) {
-        String line=new String(l);
+
+    public String findSentiment(String sentence) {
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+
         int mainSentiment = 0;
-        if (line != null && line.length() > 0) {
+        if (sentence != null && sentence.length() > 0) {
             int longest = 0;
-            Annotation annotation = pipeline.process(line);
-            for (CoreMap sentence : annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
-                Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+            Annotation annotation = pipeline.process(sentence);
+
+            for (CoreMap coreMap : annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
+                Tree tree = coreMap.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
+
                 int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
-                String partText = sentence.toString();
+                String partText = coreMap.toString();
+
                 if (partText.length() > longest) {
                     mainSentiment = sentiment;
                     longest = partText.length();
                 }
-
             }
         }
+
         return Integer.toString(mainSentiment);
-
     }
-
 }
