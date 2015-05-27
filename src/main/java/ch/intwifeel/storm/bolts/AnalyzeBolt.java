@@ -70,25 +70,28 @@ public class AnalyzeBolt extends BaseRichBolt
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        float averageSentiment=0;
 
         int mainSentiment = 0;
         if (sentence != null && sentence.length() > 0) {
             int longest = 0;
             Annotation annotation = pipeline.process(sentence);
-
+            int sentenceCount=0;
             for (CoreMap coreMap : annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
                 Tree tree = coreMap.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
-
+                sentenceCount++;
                 int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
                 String partText = coreMap.toString();
-
+                averageSentiment=averageSentiment+sentiment;
                 if (partText.length() > longest) {
                     mainSentiment = sentiment;
                     longest = partText.length();
                 }
             }
+            averageSentiment=averageSentiment/(float)sentenceCount;
         }
 
-        return Integer.toString(mainSentiment);
+       // return Integer.toString(mainSentiment);
+        return Float.toString(averageSentiment);
     }
 }
