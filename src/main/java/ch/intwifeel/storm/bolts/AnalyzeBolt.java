@@ -66,7 +66,28 @@ public class AnalyzeBolt extends BaseRichBolt
         outputFieldsDeclarer.declare(new Fields("sentence","score", "word"));
     }
 
-    public String findSentiment(String sentence) {
+    public String findSentiment(String inputsentence) {
+        String tempsentence=new String(inputsentence);
+        String[] words=tempsentence.split(" ");
+        String sentence="";
+        boolean deleteNext=false;
+        for (String word:words){
+            if (deleteNext==true){
+                deleteNext=false;
+                continue;
+            }
+            if (word.equals("RT")) {
+                deleteNext = true;
+                continue;
+
+            }
+            if (word.startsWith("http:"))
+                continue;
+            word=word.replace("#","");
+            word=word.replace("@","");
+            sentence=sentence+" "+word;
+        }
+
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
