@@ -72,7 +72,7 @@ public class ReportBolt extends BaseRichBolt
 
         Document product = products.find(eq("name", word)).first();
 
-        Document scoreDocument = new Document("score", Integer.valueOf(score))
+        Document scoreDocument = new Document("score", Double.valueOf(score))
                 .append("date", new Date())
                 .append("_class", "intwifeel.model.ScoreEntity")
                 .append("product", new Document("$ref","product").append("$id", product.get("_id")));
