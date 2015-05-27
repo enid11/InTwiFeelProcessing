@@ -8,10 +8,17 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -32,6 +39,10 @@ public class TwitterSpout extends BaseRichSpout
 
     // Shared queue for getting buffering tweets received
     LinkedBlockingQueue<String> queue = null;
+
+    private MongoClient mongoClient;
+
+    private Set<String> productList = new HashSet<>();
 
     // Class for listening on the tweet stream - for twitter4j
     private class TweetListener implements StatusListener {
@@ -84,6 +95,7 @@ public class TwitterSpout extends BaseRichSpout
         custsecret = secret;
         accesstoken = token;
         accesssecret = tokensecret;
+//        mongoClient = new MongoClient(new ServerAddress("localhost", 27017));
     }
 
     @Override
@@ -92,6 +104,20 @@ public class TwitterSpout extends BaseRichSpout
             TopologyContext         topologyContext,
             SpoutOutputCollector    spoutOutputCollector)
     {
+
+        //Put this in a function that is called one
+        mongoClient = new MongoClient(new ServerAddress("localhost", 27017));
+        MongoDatabase db = mongoClient.getDatabase("intwifeel");
+
+        MongoCollection<Document> products = db.getCollection("product");
+        for (Document document : products.find()) {
+            if (!productList.contains(document.get("name").toString())) {
+                //TODO call Twitter here for the word
+                productList.add(document.get("name").toString());
+            }
+        }
+
+
         // create the buffer to block tweets
         queue = new LinkedBlockingQueue<String>(1000);
 
@@ -137,7 +163,7 @@ public class TwitterSpout extends BaseRichSpout
         // now emit the tweet to next stage bolt
         //TODO have to connect to Mongo to get new words/products/terms, start stream afterwards
 
-        collector.emit(new Values(ret, "Term1Update"));
+        collector.emit(new Values(ret, "Term2"));
     }
 
     @Override
