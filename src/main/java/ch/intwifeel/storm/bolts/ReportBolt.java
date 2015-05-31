@@ -157,6 +157,7 @@ public class ReportBolt extends BaseRichBolt
 
             Document scoreDocument = new Document("score", Double.valueOf(tuple.getStringByField("score")))
                     .append("date", new Date())
+                    .append("example", tuple.getStringByField("sentence"))
                     .append("_class", "intwifeel.model.ScoreEntity")
                     .append("product", new Document("$ref","product").append("$id", productDocument.get("_id")));
             productDocument =  new Document("$addToSet", new Document("scores", new Document("$ref", "score").append(
