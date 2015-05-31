@@ -141,7 +141,7 @@ public class TwitterFileSpout extends BaseRichSpout
     {
         // try to pick a tweet from the file reader
         String ret = tweetFromFile.nextText();
-
+        System.out.println("Line " + ret);
         // if no tweet is available, wait for 50 ms and return
         if (ret==null)
         {

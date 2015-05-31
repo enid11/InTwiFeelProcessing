@@ -16,6 +16,7 @@ import org.bson.Document;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,9 @@ public class TwitterSpout extends BaseRichSpout
     LinkedBlockingQueue<String> queue = null;
 
     private MongoClient mongoClient;
-
+    private MongoDatabase db;
+    long oldtime = 0;
+    long difference = 60000;
     private Set<String> productList = new HashSet<>();
 
     // Class for listening on the tweet stream - for twitter4j
@@ -53,6 +56,24 @@ public class TwitterSpout extends BaseRichSpout
         {
             // add the tweet into the queue buffer
             queue.offer(status.getText());
+            if(oldtime == 0){
+                oldtime = System.currentTimeMillis();
+            }
+            else if(System.currentTimeMillis()-oldtime >= difference){
+                //change filters
+
+                productList.clear();
+                MongoCollection<Document> products = db.getCollection("product");
+                for (Document document : products.find()) {
+                        productList.add(document.get("name").toString());
+                }
+                twitterStream.filter(new FilterQuery().track(productList.toArray(new String[productList.size()])));
+
+                //possibly check conditions for scaling
+                oldtime =  System.currentTimeMillis();
+            }
+
+
         }
 
         @Override
@@ -107,7 +128,7 @@ public class TwitterSpout extends BaseRichSpout
 
         //Put this in a function that is called one
         mongoClient = new MongoClient(new ServerAddress("localhost", 27017));
-        MongoDatabase db = mongoClient.getDatabase("intwifeel");
+        db = mongoClient.getDatabase("intwifeel");
 
         MongoCollection<Document> products = db.getCollection("product");
         for (Document document : products.find()) {
@@ -143,8 +164,9 @@ public class TwitterSpout extends BaseRichSpout
         // provide the handler for twitter stream
         twitterStream.addListener(new TweetListener());
 
-        // start the sampling of tweets
-        twitterStream.sample();
+        // start the sampling of tweet
+        twitterStream.filter(new FilterQuery().track(productList.toArray(new String[productList.size()])));
+        System.out.println("Terms to track"+ Arrays.toString(productList.toArray(new String[productList.size()])));
     }
 
     @Override
@@ -162,7 +184,7 @@ public class TwitterSpout extends BaseRichSpout
 
         // now emit the tweet to next stage bolt
         //TODO have to connect to Mongo to get new words/products/terms, start stream afterwards
-
+        System.out.println("tweet "+ ret);
         collector.emit(new Values(ret, "Term2"));
     }
 
