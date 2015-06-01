@@ -6,7 +6,6 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.Utils;
 import ch.intwifeel.storm.bolts.AnalyzeBolt;
-import ch.intwifeel.storm.bolts.ParseTweetBolt;
 import ch.intwifeel.storm.bolts.ReportBolt;
 import ch.intwifeel.storm.spouts.TwitterFileSpout;
 
@@ -28,11 +27,9 @@ class TwitterFileTopology
         // attach the tweet spout to the topology - parallelism of 1
         builder.setSpout("tweet-spout", tweetSpout, 1);
 
-        // attach the parse tweet bolt using shuffle grouping
-        builder.setBolt("parse-tweet-bolt", new ParseTweetBolt(), 10).shuffleGrouping("tweet-spout");
 
         // attach the analyze bolt using shuffle grouping - parallelism of 15
-        builder.setBolt("analyze-bolt", new AnalyzeBolt(), 15).shuffleGrouping("parse-tweet-bolt");
+        builder.setBolt("analyze-bolt", new AnalyzeBolt(), 12).shuffleGrouping("parse-tweet-bolt");
 
         // attach the report bolt using global grouping - parallelism of 1
         builder.setBolt("report-bolt", new ReportBolt(), 1).globalGrouping("analyze-bolt");

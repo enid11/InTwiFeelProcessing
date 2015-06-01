@@ -6,7 +6,6 @@ import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.utils.Utils;
 import ch.intwifeel.storm.bolts.AnalyzeBolt;
-import ch.intwifeel.storm.bolts.ParseTweetBolt;
 import ch.intwifeel.storm.bolts.ReportBolt;
 import ch.intwifeel.storm.spouts.TwitterSpout;
 
@@ -28,11 +27,8 @@ class TwitterTopology
         // attach the tweet spout to the topology - parallelism of 1
         builder.setSpout("tweet-spout", tweetSpout, 1);
 
-        // attach the parse tweet bolt using shuffle grouping
-        builder.setBolt("parse-tweet-bolt", new ParseTweetBolt(), 10).shuffleGrouping("tweet-spout");
-
-        // attach the analyze bolt using shuffle grouping - parallelism of 15
-        builder.setBolt("analyze-bolt", new AnalyzeBolt(), 15).shuffleGrouping("parse-tweet-bolt");
+        // attach the analyze bolt using shuffle grouping - parallelism of 12
+        builder.setBolt("analyze-bolt", new AnalyzeBolt(), 12).shuffleGrouping("tweet-spout");
 
         // attach the report bolt using global grouping - parallelism of 1
         builder.setBolt("report-bolt", new ReportBolt(), 1).globalGrouping("analyze-bolt");
@@ -40,21 +36,19 @@ class TwitterTopology
         // create the default config object
         Config conf = new Config();
 
-        // set the config in debugging mode
+        // run it in a live cluster
         conf.setDebug(true);
 
         if (args != null && args.length > 0) {
 
-            // run it in a live cluster
 
             // set the number of workers for running all spout and bolt tasks
-            conf.setNumWorkers(3);
+            conf.setNumWorkers(6);
 
             // create the topology and submit with config
             StormSubmitter.submitTopology(args[0], conf, builder.createTopology());
 
         } else {
-
             // run it in a simulated local cluster
 
             // set the number of threads to run - similar to setting number of workers in live cluster

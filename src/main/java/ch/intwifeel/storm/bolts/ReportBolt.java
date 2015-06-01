@@ -82,47 +82,48 @@ public class ReportBolt extends BaseRichBolt
     @Override
     public void execute(Tuple tuple)
     {
+
         // access the column 'word'
         String word = tuple.getStringByField("word");
 
         String score = tuple.getStringByField("score");
 
         String exampleSentence = tuple.getStringByField("sentence");
+        if(word.equalsIgnoreCase("")) {
+            // publish the example sentence to redis using word as the key
+            redis.set(word, exampleSentence);
+            redis.expire(word, 20);
+            if (isTickTuple(tuple)) {
 
-        // publish the example sentence to redis using word as the key
-        redis.set(word, exampleSentence);
-        redis.expire(word, 20);
-        if (isTickTuple(tuple)) {
-
-            // If so, it is indication for batch flush. But don't flush if previous
-            // flush was done very recently (either due to batch size threshold was
-            // crossed or because of another tick tuple
-            //
-            if ((System.currentTimeMillis() / 1000 - lastBatchProcessTimeSeconds) >= batchIntervalInSec) {
-                LOG.debug("Current queue size is " + this.queue.size()
-                        + ". But received tick tuple so executing the batch");
-                saveScoreToMongo();
+                // If so, it is indication for batch flush. But don't flush if previous
+                // flush was done very recently (either due to batch size threshold was
+                // crossed or because of another tick tuple
+                //
+                if ((System.currentTimeMillis() / 1000 - lastBatchProcessTimeSeconds) >= batchIntervalInSec) {
+                    LOG.debug("Current queue size is " + this.queue.size()
+                            + ". But received tick tuple so executing the batch");
+                    saveScoreToMongo();
+                } else {
+                    LOG.debug("Current queue size is " + this.queue.size()
+                            + ". Received tick tuple but last batch was executed "
+                            + (System.currentTimeMillis() / 1000 - lastBatchProcessTimeSeconds)
+                            + " seconds back that is less than " + batchIntervalInSec
+                            + " so ignoring the tick tuple");
+                }
             } else {
-                LOG.debug("Current queue size is " + this.queue.size()
-                        + ". Received tick tuple but last batch was executed "
-                        + (System.currentTimeMillis() / 1000 - lastBatchProcessTimeSeconds)
-                        + " seconds back that is less than " + batchIntervalInSec
-                        + " so ignoring the tick tuple");
-            }
-        } else {
 
-            // Add the tuple to queue. But don't ack it yet.
-            this.queue.add(tuple);
-            int queueSize = this.queue.size();
+                // Add the tuple to queue. But don't ack it yet.
+                this.queue.add(tuple);
+                int queueSize = this.queue.size();
 
-            LOG.debug("current queue size is " + queueSize);
-            if (queueSize >= batchSize) {
-                LOG.debug("Current queue size is >= " + batchSize
-                        + " executing the batch");
-                saveScoreToMongo();
+                LOG.debug("current queue size is " + queueSize);
+                if (queueSize >= batchSize) {
+                    LOG.debug("Current queue size is >= " + batchSize
+                            + " executing the batch");
+                    saveScoreToMongo();
+                }
             }
         }
-
     }
 
     @Override
@@ -130,7 +131,7 @@ public class ReportBolt extends BaseRichBolt
         // configure how often a tick tuple will be sent to our bolt
         Config conf = new Config();
         conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 45);
-        System.out.println("timeout default " + Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS);
+        LOG.debug("timeout default " + Config.TOPOLOGY_MESSAGE_TIMEOUT_SECS);
         return conf;
     }
 
@@ -174,7 +175,6 @@ public class ReportBolt extends BaseRichBolt
             for (Tuple tuple : tuples) {
                 this._collector.ack(tuple);
             }
-            System.out.println("done");
         } catch (Exception e) {
             LOG.error("Unable to process " + tuples.size() + " tuples", e);
             // Fail entire batch

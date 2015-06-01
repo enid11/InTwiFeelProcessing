@@ -48,12 +48,19 @@ public class AnalyzeBolt extends BaseRichBolt
         // get the word from the 1st column of incoming tuple
         String sentence = tuple.getString(0);
         String word = tuple.getString(1);
-        //String score= Integer.toString(0);//sentiment analysis logic
-        String score = findSentiment(sentence);
+
+        if(word.equalsIgnoreCase("")) {
+            collector.emit(new Values(sentence, "0", word));
+        }
+        else {
+
+            //String score= Integer.toString(0);//sentiment analysis logic
+            String score = findSentiment(sentence);
 
 
-        // emit the word and count
-        collector.emit(new Values(sentence, score, word));
+            // emit the word and count
+            collector.emit(new Values(sentence, score, word));
+        }
     }
 
     @Override

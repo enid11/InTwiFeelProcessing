@@ -182,10 +182,17 @@ public class TwitterSpout extends BaseRichSpout
             return;
         }
 
+        String word="";
+        for (String s: productList) {
+            if(ret.toLowerCase().contains(s.toLowerCase())){
+                // now emit the tweet to next stage bolt
+                word =s;
+                collector.emit(new Values(ret, s));
+                return;
+            }
+        }
         // now emit the tweet to next stage bolt
-        //TODO have to connect to Mongo to get new words/products/terms, start stream afterwards
-        System.out.println("tweet "+ ret);
-        collector.emit(new Values(ret, "Term2"));
+        collector.emit(new Values(ret, word));
     }
 
     @Override
